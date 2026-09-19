@@ -3,6 +3,7 @@
 use super::*;
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{Address, Env, String};
+use soroban_sdk::testutils::Ledger;
 
 #[test]
 fn test_write_and_read() {
@@ -67,4 +68,20 @@ fn test_multiple_messages_ordered() {
     assert_eq!(client.get_message(&0).text, String::from_str(&env, "first"));
     assert_eq!(client.get_message(&1).text, String::from_str(&env, "second"));
     assert_eq!(client.get_message(&2).text, String::from_str(&env, "third"));
+}
+
+#[test]
+fn test_ledger_recorded() {
+    let env = Env::default();
+    env.mock_all_auths();
+    env.ledger().set_sequence_number(42);
+
+    let contract_id = env.register(GuestbookContract, ());
+    let client = GuestbookContractClient::new(&env, &contract_id);
+
+    let user = Address::generate(&env);
+    client.write_message(&user, &String::from_str(&env, "test"));
+
+    let msg = client.get_message(&0);
+    assert_eq!(msg.ledger, 42);
 }
