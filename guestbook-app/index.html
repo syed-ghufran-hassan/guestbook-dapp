@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stellar Guestbook — Level 2</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; color: #1a1a2e; display: flex; justify-content: center; padding: 20px; min-height: 100vh; }
+        .app-container { max-width: 800px; width: 100%; }
+        header { text-align: center; margin-bottom: 30px; }
+        header h1 { font-size: 2.8rem; background: linear-gradient(135deg, #7b2ffc, #4a00e0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .subtitle { color: #666; font-size: 1rem; }
+        .card { background: white; border-radius: 16px; padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #e9ecf0; }
+        .wallet-section { display: flex; justify-content: center; align-items: center; min-height: 80px; }
+        #walletConnectContainer { width: 100%; text-align: center; }
+        .wallet-info { width: 100%; }
+        .address-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .balance-row { display: flex; align-items: center; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
+        .label { font-weight: 600; color: #555; font-size: 0.9rem; }
+        .address { font-family: monospace; background: #f0f2f5; padding: 4px 12px; border-radius: 20px; font-size: 0.9rem; }
+        .balance { font-weight: 700; font-size: 1.2rem; color: #1a1a2e; }
+        .btn-primary { background: #7b2ffc; color: white; border: none; padding: 10px 24px; border-radius: 30px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.2s; }
+        .btn-primary:hover:not(:disabled) { background: #5a1fc4; transform: scale(1.02); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-disconnect { background: transparent; border: 1px solid #e74c3c; color: #e74c3c; padding: 4px 16px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: 0.2s; }
+        .btn-disconnect:hover { background: #e74c3c; color: white; }
+        .btn-fund { background: #2ecc71; color: white; border: none; padding: 4px 16px; border-radius: 20px; cursor: pointer; font-weight: 600; font-size: 0.8rem; transition: 0.2s; }
+        .btn-fund:hover { background: #27ae60; }
+        .btn-refresh { background: transparent; border: 1px solid #7b2ffc; color: #7b2ffc; padding: 4px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; font-weight: 600; margin-left: auto; }
+        .btn-refresh:hover { background: #7b2ffc; color: white; }
+        .post-section h2, .entries-section h2 { font-size: 1.2rem; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+        .post-section form { display: flex; flex-direction: column; gap: 12px; }
+        textarea { padding: 12px; border-radius: 12px; border: 1px solid #dce0e6; font-family: inherit; font-size: 1rem; resize: vertical; transition: 0.2s; }
+        textarea:focus { outline: none; border-color: #7b2ffc; box-shadow: 0 0 0 3px rgba(123,47,252,0.2); }
+        .tx-feedback { margin-top: 16px; padding: 12px 16px; border-radius: 12px; word-break: break-all; }
+        .tx-feedback.success { background: #eafaf1; border: 1px solid #2ecc71; color: #1a7a3a; }
+        .tx-feedback.error { background: #fdedec; border: 1px solid #e74c3c; color: #922b21; }
+        .tx-feedback.warning { background: #fef9e7; border: 1px solid #f39c12; color: #7d6608; }
+        .tx-feedback a { color: #7b2ffc; text-decoration: none; font-weight: 600; }
+        .tx-feedback a:hover { text-decoration: underline; }
+        .tx-status { display: flex; gap: 24px; align-items: center; padding: 16px; margin-top: 16px; background: #f8f9fc; border-radius: 12px; flex-wrap: wrap; }
+        .status-step { display: flex; align-items: center; gap: 8px; opacity: 0.4; transition: 0.3s; font-size: 0.9rem; }
+        .status-step.active { opacity: 1; font-weight: 600; }
+        .status-dot { width: 12px; height: 12px; border-radius: 50%; background: #dce0e6; }
+        .status-step.active .status-dot { background: #2ecc71; box-shadow: 0 0 0 4px rgba(46,204,113,0.2); }
+        .status-step.failed .status-dot { background: #e74c3c; box-shadow: 0 0 0 4px rgba(231,76,60,0.2); }
+        #entriesContainer { min-height: 100px; }
+        .entries-list { list-style: none; display: flex; flex-direction: column; gap: 16px; }
+        .entry-item { background: #f8f9fc; padding: 16px; border-radius: 12px; border-left: 4px solid #7b2ffc; }
+        .entry-message { font-size: 1.1rem; margin-bottom: 8px; font-style: italic; }
+        .entry-meta { display: flex; gap: 16px; font-size: 0.8rem; color: #666; align-items: center; flex-wrap: wrap; }
+        .entry-meta a { color: #7b2ffc; text-decoration: none; font-weight: 600; }
+        .entry-meta a:hover { text-decoration: underline; }
+        .empty-msg { color: #888; text-align: center; padding: 20px 0; }
+        footer { text-align: center; margin-top: 40px; color: #aaa; font-size: 0.8rem; }
+        @media (max-width: 600px) { .address-row, .balance-row { flex-direction: column; align-items: flex-start; } header h1 { font-size: 2rem; } }
+        .loading-spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #7b2ffc; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 10px; vertical-align: middle; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .contract-badge { font-family: monospace; font-size: 0.75rem; background: #f0f2f5; padding: 2px 8px; border-radius: 12px; color: #555; }
+        .live-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #2ecc71; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>📖 Stellar Guestbook</h1>
+            <p class="subtitle">Level 2 — Soroban Smart Contract Edition</p>
+            <script>
+              window.global ||= window;
+            </script>
+            <p class="subtitle" style="margin-top:8px;">
+                <span class="contract-badge" id="contractBadge">Loading contract…</span>
+            </p>
+        </header>
+
+        <section class="card wallet-section" id="walletSection">
+            <div id="walletConnectContainer">
+                <button id="connectBtn" class="btn-primary">🔗 Connect Wallet</button>
+            </div>
+            <div id="walletInfoContainer" style="display: none; width: 100%;">
+                <div class="wallet-info">
+                    <div class="address-row">
+                        <span class="label">Connected:</span>
+                        <span class="address" id="publicKeyDisplay">---</span>
+                        <button id="disconnectBtn" class="btn-disconnect">Disconnect</button>
+                    </div>
+                    <div class="balance-row">
+                        <span class="label">XLM Balance:</span>
+                        <span class="balance" id="balanceDisplay">0.0000</span>
+                        <button id="fundBtn" class="btn-fund" style="display: none;">💰 Get Test XLM</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="card post-section">
+            <h2>✍️ Leave a Message <span style="font-size:0.8rem;color:#888;font-weight:400;">(on-chain)</span></h2>
+            <form id="messageForm">
+                <textarea id="messageInput" placeholder="Write your guestbook entry here..." rows="3" disabled></textarea>
+                <button type="submit" id="submitBtn" class="btn-primary" disabled>📤 Sign & Post to Contract</button>
+            </form>
+            <div id="txStatusTracker" class="tx-status" style="display: none;">
+                <div class="status-step" id="stepPending">
+                    <span class="status-dot"></span><span>Pending</span>
+                </div>
+                <div class="status-step" id="stepConfirmed">
+                    <span class="status-dot"></span><span>Confirmed</span>
+                </div>
+                <div class="status-step" id="stepSettled">
+                    <span class="status-dot"></span><span>Settled</span>
+                </div>
+                <div class="status-step" id="stepFailed" style="display: none;">
+                    <span class="status-dot"></span><span>Failed</span>
+                </div>
+            </div>
+            <div id="txFeedback" class="tx-feedback" style="display: none;"></div>
+        </section>
+
+        <section class="card entries-section">
+            <h2>
+                <span class="live-indicator"></span>
+                Recent Guestbook Entries
+                <button id="refreshBtn" class="btn-refresh">🔄 Refresh</button>
+            </h2>
+            <div id="entriesContainer"><p class="empty-msg">Loading entries…</p></div>
+        </section>
+
+        <footer><p>Built for the Stellar Journey to Mastery — Level 2</p></footer>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
