@@ -36,3 +36,15 @@ fn test_empty_message_rejected() {
     let user = Address::generate(&env);
     client.write_message(&user, &String::from_str(&env, ""));
 }
+
+#[test]
+fn test_get_nonexistent_message() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register(GuestbookContract, ());
+    let client = GuestbookContractClient::new(&env, &contract_id);
+
+    let result = client.try_get_message(&999);
+    assert!(result.is_err());
+}
