@@ -22,7 +22,7 @@ Built for the **Stellar Journey to Mastery — Level 2**.
 
 ## 🚀 Live Demo
 
-**Live URL:** _Add your Vercel / Netlify link here (optional)_
+**Live URL:** [https://guestbook-dapp-lvv6.vercel.app/](https://guestbook-dapp-lvv6.vercel.app/)
 
 > To deploy: `npm run build` then drag the `dist/` folder into Netlify, or run `vercel` from this directory.
 
