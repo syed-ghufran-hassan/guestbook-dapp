@@ -48,3 +48,23 @@ fn test_get_nonexistent_message() {
     let result = client.try_get_message(&999);
     assert!(result.is_err());
 }
+
+#[test]
+fn test_multiple_messages_ordered() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register(GuestbookContract, ());
+    let client = GuestbookContractClient::new(&env, &contract_id);
+
+    let user = Address::generate(&env);
+
+    client.write_message(&user, &String::from_str(&env, "first"));
+    client.write_message(&user, &String::from_str(&env, "second"));
+    client.write_message(&user, &String::from_str(&env, "third"));
+
+    assert_eq!(client.total_messages(), 3);
+    assert_eq!(client.get_message(&0).text, String::from_str(&env, "first"));
+    assert_eq!(client.get_message(&1).text, String::from_str(&env, "second"));
+    assert_eq!(client.get_message(&2).text, String::from_str(&env, "third"));
+}
