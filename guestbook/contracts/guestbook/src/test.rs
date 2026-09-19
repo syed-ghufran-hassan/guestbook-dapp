@@ -85,3 +85,18 @@ fn test_ledger_recorded() {
     let msg = client.get_message(&0);
     assert_eq!(msg.ledger, 42);
 }
+
+#[test]
+fn test_author_stored() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register(GuestbookContract, ());
+    let client = GuestbookContractClient::new(&env, &contract_id);
+
+    let user = Address::generate(&env);
+    client.write_message(&user, &String::from_str(&env, "hello"));
+
+    let msg = client.get_message(&0);
+    assert_eq!(msg.author, user);
+}
